@@ -61,6 +61,9 @@ class BurpExtender(IBurpExtender, IProxyListener, IMessageEditorTabFactory):
             if stringIsAssets(msg):
                 messageInfo.setHighlight('pink')
 
+            if stringIsMy(msg):
+                messageInfo.setHighlight('green')
+
 
 class SHunterTab(IMessageEditorTab):
 
@@ -92,6 +95,7 @@ class SHunterTab(IMessageEditorTab):
             idcard = stringIsIdCard(content)
             assets = stringIsAssets(content)
             keys = stringIsKey(content)
+            my_keyword = stringIsMy(content)
 
             if phone:
                 pretty_msg += "Find phone:" + phone + '\n'
@@ -101,6 +105,8 @@ class SHunterTab(IMessageEditorTab):
                 pretty_msg += "Find IP Address:" + assets + '\n'
             if keys:
                 pretty_msg += "Find Keys:" + keys + '\n'
+            if my_keyword:
+                pretty_msg += "Find my_keyword:" + my_keyword + '\n'
 
             self._txtInput.setText(pretty_msg)
         return
@@ -119,7 +125,8 @@ def stringIsKey(string):
     # 匹配token或者密码泄露
     key_list = re.findall(
         r'\b(?:secret|secret_key|token|secret_token|auth_token|access_token|username|password|aws_access_key_id'
-        r'|aws_secret_access_key|secretkey|authtoken|accesstoken|access-token|authkey|client_secret|bucket|email|HEROKU_API_KEY|SF_USERNAME|PT_TOKEN|id_dsa|clientsecret|client-secret|encryption-key|pass|encryption_key|encryptionkey|secret-key|bearer|JEKYLL_GITHUB_TOKEN|HOMEBREW_GITHUB_API_TOKEN|api_key|api_secret_key|api-key|private_key|client_key|client_id|sshkey|ssh_key|ssh-key|privatekey|DB_USERNAME|oauth_token|irc_pass|dbpasswd|xoxa-2|xoxrprivate-key|consumer_key|consumer_secret|access_token_secret|SLACK_BOT_TOKEN|slack_api_token|api_token|ConsumerKey|ConsumerSecret|SESSION_TOKEN|session_key|session_secret|slack_token|slack_secret_token|bot_access_token|passwd|api|eid|sid|apikey|userid|user_id|user-id|appsecret)["\s]*(?::|=|=:|=>)["\s]*[a-z0-9A-Z]{8,64}"?',
+        r'|aws_secret_access_key|secretkey|authtoken|accesstoken|access-token|authkey|client_secret|bucket|email'
+        r'|HEROKU_API_KEY|SF_USERNAME|PT_TOKEN|id_dsa|clientsecret|client-secret|encryption-key|pass|encryption_key|encryptionkey|secret-key|bearer|JEKYLL_GITHUB_TOKEN|HOMEBREW_GITHUB_API_TOKEN|api_key|api_secret_key|api-key|private_key|client_key|client_id|sshkey|ssh_key|ssh-key|privatekey|DB_USERNAME|oauth_token|irc_pass|dbpasswd|xoxa-2|xoxrprivate-key|consumer_key|consumer_secret|access_token_secret|SLACK_BOT_TOKEN|slack_api_token|api_token|ConsumerKey|ConsumerSecret|SESSION_TOKEN|session_key|session_secret|slack_token|slack_secret_token|bot_access_token|passwd|api|eid|sid|apikey|userid|user_id|user-id|appsecret)["\s]*(?::|=|=:|=>)["\s]*[a-z0-9A-Z]{8,64}"?',
         string, re.M | re.I)
     # TODO:自己添加相关的关键字
     if key_list:
@@ -139,6 +146,20 @@ def stringIsPhone(string):
             iphoneSet.add(filter(str.isdigit, i))
         iphones = ','.join(iphoneSet)
         return iphones
+    return False
+
+
+def stringIsMy(string):
+    # 个人自定义的关键词
+    my_keywords = re.findall(
+        r'sourceMappingURL', string)
+    if my_keywords:
+        my_keywords = set(my_keywords)
+        my_keywordSet = set()
+        for i in my_keywords:
+            my_keywordSet.add(i)
+        my_keywords = ','.join(my_keywordSet)
+        return my_keywords
     return False
 
 
